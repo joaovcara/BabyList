@@ -22,7 +22,9 @@ import CategoryIcon from '@mui/icons-material/Category';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PublicIcon from '@mui/icons-material/Public';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const DRAWER_WIDTH = 260;
@@ -68,7 +70,20 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </ListItem>
         ))}
       </List>
-      <List sx={{ px: 1, pb: 2 }}>
+      <List sx={{ px: 1, pb: 1 }}>
+        <ListItem disablePadding>
+          <ListItemButton
+            component={RouterLink}
+            to="/"
+            sx={{ borderRadius: 2, mb: 0.5 }}
+            onClick={() => setMobileOpen(false)}
+          >
+            <ListItemIcon sx={{ minWidth: 40 }}>
+              <PublicIcon />
+            </ListItemIcon>
+            <ListItemText primary="Lista pública" />
+          </ListItemButton>
+        </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={() => { logout(); navigate('/login'); }} sx={{ borderRadius: 2 }}>
             <ListItemIcon sx={{ minWidth: 40 }}>
