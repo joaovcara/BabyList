@@ -25,6 +25,9 @@ export interface Configuracoes {
   tituloLista: string;
   nomeBebe: string;
   categorias: string[];
+  chavePix?: string;
+  mensagemContribuicao?: string;
+  qrCodePix?: string;
 }
 
 export interface Database {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -8,16 +8,25 @@ import {
   Typography,
 } from '@mui/material';
 import { configApi, getErrorMessage } from '../../api';
+import { appPath } from '../../config/app';
 import type { Configuracoes } from '../../types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function ConfiguracoesPage() {
-  const [config, setConfig] = useState<Configuracoes>({ tituloLista: '', nomeBebe: '' });
+  const [config, setConfig] = useState<Configuracoes>({
+    tituloLista: '',
+    nomeBebe: '',
+    chavePix: '',
+    mensagemContribuicao: '',
+    qrCodePix: '',
+  });
   const [senhaAtual, setSenhaAtual] = useState('');
   const [senhaNova, setSenhaNova] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { showMessage } = useSnackbar();
 
   useEffect(() => {
@@ -37,6 +46,60 @@ export function ConfiguracoesPage() {
       });
       setConfig(res.data);
       showMessage('Configurações salvas');
+    } catch (err) {
+      showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSavePixConfig = async () => {
+    setSaving(true);
+    try {
+      const res = await configApi.update({
+        chavePix: config.chavePix,
+        mensagemContribuicao: config.mensagemContribuicao,
+      });
+      setConfig(res.data);
+      showMessage('Configurações PIX salvas');
+    } catch (err) {
+      showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUploadQrCode = async () => {
+    if (!selectedFile) {
+      showMessage('Selecione uma imagem do QR Code', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await configApi.uploadQrCode(selectedFile);
+      setConfig(res.data);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      showMessage('QR Code enviado com sucesso');
+    } catch (err) {
+      showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteQrCode = async () => {
+    setSaving(true);
+    try {
+      const res = await configApi.deleteQrCode();
+      setConfig(res.data);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      showMessage('QR Code removido');
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
     } finally {
@@ -64,6 +127,10 @@ export function ConfiguracoesPage() {
   };
 
   if (loading) return null;
+
+  const qrCodeUrl = config.qrCodePix
+    ? appPath(`/api/uploads/${config.qrCodePix}`)
+    : null;
 
   return (
     <Box>
@@ -98,6 +165,90 @@ export function ConfiguracoesPage() {
           >
             Salvar
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Contribuição PIX
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Sem chave PIX ou QR Code, o botão Contribuir não aparece na página pública.
+            Gere o QR Code no app do seu banco e envie a imagem aqui.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Chave PIX"
+            value={config.chavePix ?? ''}
+            onChange={(e) => setConfig({ ...config, chavePix: e.target.value })}
+            margin="normal"
+            helperText="E-mail, CPF, telefone ou chave aleatória"
+          />
+          <TextField
+            fullWidth
+            label="Mensagem no modal"
+            value={config.mensagemContribuicao ?? ''}
+            onChange={(e) => setConfig({ ...config, mensagemContribuicao: e.target.value })}
+            margin="normal"
+            multiline
+            rows={2}
+            helperText="Texto opcional exibido no modal de contribuição"
+          />
+
+          {qrCodeUrl && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+              <Box
+                component="img"
+                src={qrCodeUrl}
+                alt="QR Code PIX atual"
+                sx={{ maxWidth: 200, width: '100%', borderRadius: 2 }}
+              />
+            </Box>
+          )}
+
+          <Button variant="outlined" component="label" sx={{ mt: 1 }}>
+            Selecionar imagem
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+            />
+          </Button>
+          {selectedFile && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Arquivo selecionado: {selectedFile.name}
+            </Typography>
+          )}
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleSavePixConfig}
+              disabled={saving}
+            >
+              Salvar PIX
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleUploadQrCode}
+              disabled={saving || !selectedFile}
+            >
+              Enviar QR Code
+            </Button>
+            {config.qrCodePix && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleDeleteQrCode}
+                disabled={saving}
+              >
+                Remover QR Code
+              </Button>
+            )}
+          </Box>
         </CardContent>
       </Card>
 

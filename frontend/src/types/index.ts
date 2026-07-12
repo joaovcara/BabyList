@@ -28,6 +28,9 @@ export interface Reserva {
 export interface Configuracoes {
   tituloLista: string;
   nomeBebe: string;
+  chavePix?: string;
+  mensagemContribuicao?: string;
+  qrCodePix?: string;
 }
 
 export interface DashboardData {

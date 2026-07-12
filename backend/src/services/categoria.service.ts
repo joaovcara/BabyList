@@ -1,6 +1,10 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { AppError } from '../errors/AppError.js';
+import { env } from '../config/env.js';
 import { databaseRepository } from '../repositories/database.repository.js';
 import { Configuracoes } from '../types/index.js';
+import { getQrCodeExtension } from '../middleware/upload.js';
 
 export class CategoriaService {
   async findAll(): Promise<string[]> {
@@ -90,15 +94,25 @@ export class CategoriaService {
 export class ConfigService {
   async get(): Promise<Configuracoes> {
     const db = await databaseRepository.read();
-    return { ...db.configuracoes, categorias: [...db.configuracoes.categorias] };
+    return {
+      ...db.configuracoes,
+      categorias: [...db.configuracoes.categorias],
+      chavePix: db.configuracoes.chavePix ?? '',
+      mensagemContribuicao: db.configuracoes.mensagemContribuicao ?? '',
+      qrCodePix: db.configuracoes.qrCodePix ?? '',
+    };
   }
 
   async update(
-    data: Partial<Pick<Configuracoes, 'tituloLista' | 'nomeBebe'>>,
+    data: Partial<
+      Pick<Configuracoes, 'tituloLista' | 'nomeBebe' | 'chavePix' | 'mensagemContribuicao'>
+    >,
     userId?: number,
     senhaAtual?: string,
     senhaNova?: string
   ): Promise<Configuracoes> {
+    const chavePix = data.chavePix !== undefined ? data.chavePix.trim() : undefined;
+
     await databaseRepository.write((db) => {
       if (data.tituloLista !== undefined) {
         db.configuracoes.tituloLista = data.tituloLista.trim();
@@ -106,12 +120,54 @@ export class ConfigService {
       if (data.nomeBebe !== undefined) {
         db.configuracoes.nomeBebe = data.nomeBebe.trim();
       }
+      if (data.chavePix !== undefined) {
+        db.configuracoes.chavePix = chavePix ?? '';
+      }
+      if (data.mensagemContribuicao !== undefined) {
+        db.configuracoes.mensagemContribuicao = data.mensagemContribuicao.trim();
+      }
     });
 
     if (senhaNova && userId) {
       const { authService } = await import('./auth.service.js');
       await authService.changePassword(userId, senhaAtual || '', senhaNova);
     }
+
+    return this.get();
+  }
+
+  private async removeExistingQrCodeFiles(): Promise<void> {
+    await fs.mkdir(env.uploadsPath, { recursive: true });
+    const files = await fs.readdir(env.uploadsPath);
+    await Promise.all(
+      files
+        .filter((file) => file.startsWith('qrcode-pix.'))
+        .map((file) => fs.unlink(path.join(env.uploadsPath, file)))
+    );
+  }
+
+  async uploadQrCode(buffer: Buffer, mimetype: string): Promise<Configuracoes> {
+    const ext = getQrCodeExtension(mimetype);
+    const filename = `qrcode-pix.${ext}`;
+    const filePath = path.join(env.uploadsPath, filename);
+
+    await this.removeExistingQrCodeFiles();
+    await fs.mkdir(env.uploadsPath, { recursive: true });
+    await fs.writeFile(filePath, buffer);
+
+    await databaseRepository.write((db) => {
+      db.configuracoes.qrCodePix = filename;
+    });
+
+    return this.get();
+  }
+
+  async deleteQrCode(): Promise<Configuracoes> {
+    await this.removeExistingQrCodeFiles();
+
+    await databaseRepository.write((db) => {
+      db.configuracoes.qrCodePix = '';
+    });
 
     return this.get();
   }

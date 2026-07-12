@@ -4,6 +4,7 @@ import { produtoController, dashboardController } from '../controllers/produto.c
 import { reservaController } from '../controllers/reserva.controller.js';
 import { categoriaController, configController } from '../controllers/categoria.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { qrCodeUpload } from '../middleware/upload.js';
 
 const router = Router();
 
@@ -35,5 +36,16 @@ router.delete('/categorias/:nome', authMiddleware, (req, res, next) => categoria
 router.get('/dashboard', authMiddleware, (req, res, next) => dashboardController.get(req, res, next));
 router.get('/configuracoes', (req, res, next) => configController.get(req, res, next));
 router.put('/configuracoes', authMiddleware, (req, res, next) => configController.update(req, res, next));
+router.post(
+  '/configuracoes/qr-code',
+  authMiddleware,
+  qrCodeUpload.single('file'),
+  (req, res, next) => configController.uploadQrCode(req, res, next)
+);
+router.delete(
+  '/configuracoes/qr-code',
+  authMiddleware,
+  (req, res, next) => configController.deleteQrCode(req, res, next)
+);
 
 export default router;

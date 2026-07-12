@@ -11,6 +11,9 @@ const DEFAULT_DATABASE: Database = {
   configuracoes: {
     tituloLista: 'Enxoval do Bebê',
     nomeBebe: '',
+    chavePix: '',
+    mensagemContribuicao: '',
+    qrCodePix: '',
     categorias: [
       'Roupas',
       'Banho',
@@ -35,6 +38,7 @@ export class DatabaseRepository {
   async initialize(): Promise<void> {
     const dir = path.dirname(this.dbPath);
     await fs.mkdir(dir, { recursive: true });
+    await fs.mkdir(env.uploadsPath, { recursive: true });
 
     try {
       await fs.access(this.dbPath);

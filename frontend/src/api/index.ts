@@ -57,9 +57,19 @@ export const configApi = {
   update: (data: {
     tituloLista?: string;
     nomeBebe?: string;
+    chavePix?: string;
+    mensagemContribuicao?: string;
     senhaAtual?: string;
     senhaNova?: string;
   }) => api.put<Configuracoes>('/configuracoes', data),
+  uploadQrCode: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post<Configuracoes>('/configuracoes/qr-code', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteQrCode: () => api.delete<Configuracoes>('/configuracoes/qr-code'),
 };
 
 export function getErrorMessage(error: unknown): string {

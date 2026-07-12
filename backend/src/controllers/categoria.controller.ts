@@ -50,13 +50,20 @@ export class CategoriaController {
 }
 
 export class ConfigController {
+  private toPublicConfig(config: Awaited<ReturnType<typeof configService.get>>) {
+    return {
+      tituloLista: config.tituloLista,
+      nomeBebe: config.nomeBebe,
+      chavePix: config.chavePix ?? '',
+      mensagemContribuicao: config.mensagemContribuicao ?? '',
+      qrCodePix: config.qrCodePix ?? '',
+    };
+  }
+
   async get(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const config = await configService.get();
-      res.json({
-        tituloLista: config.tituloLista,
-        nomeBebe: config.nomeBebe,
-      });
+      res.json(this.toPublicConfig(config));
     } catch (err) {
       next(err);
     }
@@ -64,17 +71,48 @@ export class ConfigController {
 
   async update(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { tituloLista, nomeBebe, senhaAtual, senhaNova } = req.body;
+      const {
+        tituloLista,
+        nomeBebe,
+        chavePix,
+        mensagemContribuicao,
+        senhaAtual,
+        senhaNova,
+      } = req.body;
       const config = await configService.update(
-        { tituloLista, nomeBebe },
+        {
+          tituloLista,
+          nomeBebe,
+          chavePix,
+          mensagemContribuicao,
+        },
         req.user?.userId,
         senhaAtual,
         senhaNova
       );
-      res.json({
-        tituloLista: config.tituloLista,
-        nomeBebe: config.nomeBebe,
-      });
+      res.json(this.toPublicConfig(config));
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async uploadQrCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: 'Arquivo não enviado' });
+        return;
+      }
+      const config = await configService.uploadQrCode(req.file.buffer, req.file.mimetype);
+      res.json(this.toPublicConfig(config));
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteQrCode(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const config = await configService.deleteQrCode();
+      res.json(this.toPublicConfig(config));
     } catch (err) {
       next(err);
     }

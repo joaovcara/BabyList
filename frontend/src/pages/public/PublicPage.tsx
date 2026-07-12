@@ -21,7 +21,9 @@ import {
 import ChildCareIcon from '@mui/icons-material/ChildCare';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import LoginIcon from '@mui/icons-material/Login';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import { produtoApi, configApi, reservaApi, getErrorMessage } from '../../api';
+import { ContribuirModal } from '../../components/ContribuirModal';
 import { QuantityInput } from '../../components/QuantityInput';
 import type { Produto, Configuracoes } from '../../types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
@@ -33,6 +35,7 @@ export function PublicPage() {
   const [config, setConfig] = useState<Configuracoes>({ tituloLista: '', nomeBebe: '' });
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [contribuirOpen, setContribuirOpen] = useState(false);
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [nome, setNome] = useState('');
   const [quantidade, setQuantidade] = useState(1);
@@ -104,6 +107,8 @@ export function PublicPage() {
     }
   };
 
+  const showContribuir = Boolean(config.chavePix?.trim() || config.qrCodePix?.trim());
+
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -140,6 +145,40 @@ export function PublicPage() {
                 </Typography>
               )}
             </Box>
+            {showContribuir && (
+              isMobile ? (
+                <IconButton
+                  onClick={() => setContribuirOpen(true)}
+                  aria-label="Contribuir"
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    color: 'primary.dark',
+                    border: '1px solid',
+                    borderColor: 'primary.dark',
+                  }}
+                >
+                  <VolunteerActivismIcon />
+                </IconButton>
+              ) : (
+                <Button
+                  onClick={() => setContribuirOpen(true)}
+                  startIcon={<VolunteerActivismIcon />}
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    color: 'primary.dark',
+                    borderColor: 'primary.dark',
+                  }}
+                  variant="outlined"
+                  size="small"
+                >
+                  Contribuir
+                </Button>
+              )
+            )}
             {isMobile ? (
               <IconButton
                 component={RouterLink}
@@ -306,6 +345,12 @@ export function PublicPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ContribuirModal
+        open={contribuirOpen}
+        onClose={() => setContribuirOpen(false)}
+        config={config}
+      />
     </Box>
   );
 }
