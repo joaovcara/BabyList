@@ -22,6 +22,7 @@ import ChildCareIcon from '@mui/icons-material/ChildCare';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import LoginIcon from '@mui/icons-material/Login';
 import { produtoApi, configApi, reservaApi, getErrorMessage } from '../../api';
+import { QuantityInput } from '../../components/QuantityInput';
 import type { Produto, Configuracoes } from '../../types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
@@ -277,18 +278,12 @@ export function PublicPage() {
             margin="normal"
             required
           />
-          <TextField
-            fullWidth
+          <QuantityInput
             label="Quantidade"
-            type="number"
             value={quantidade}
-            onChange={(e) => setQuantidade(parseInt(e.target.value) || 1)}
-            margin="normal"
-            inputProps={{
-              min: 1,
-              max: selectedProduto?.disponivel ?? 1,
-            }}
-            required
+            onChange={setQuantidade}
+            min={1}
+            max={selectedProduto?.disponivel ?? 1}
           />
           <TextField
             fullWidth

@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { produtoApi, categoriaApi, getErrorMessage } from '../../api';
 import type { Produto } from '../../types';
 import { ProdutoAdminCard } from '../../components/admin/ProdutoAdminCard';
+import { QuantityInput } from '../../components/QuantityInput';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 interface ProdutoForm {
@@ -223,23 +224,18 @@ export function ProdutosPage() {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            fullWidth
+          <QuantityInput
             label="Necessário"
-            type="number"
             value={form.necessario}
-            onChange={(e) => setForm({ ...form, necessario: parseInt(e.target.value) || 0 })}
-            margin="normal"
-            inputProps={{ min: 0 }}
+            onChange={(necessario) => setForm({ ...form, necessario })}
+            min={0}
           />
-          <TextField
-            fullWidth
+          <QuantityInput
             label="Possui"
-            type="number"
             value={form.possui}
-            onChange={(e) => setForm({ ...form, possui: parseInt(e.target.value) || 0 })}
-            margin="normal"
-            inputProps={{ min: 0, max: form.necessario }}
+            onChange={(possui) => setForm({ ...form, possui })}
+            min={0}
+            max={form.necessario}
           />
         </DialogContent>
         <DialogActions>
@@ -251,14 +247,11 @@ export function ProdutosPage() {
       <Dialog open={receberOpen} onClose={() => setReceberOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Recebi presente</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
+          <QuantityInput
             label="Quantidade recebida"
-            type="number"
             value={quantidadeRecebida}
-            onChange={(e) => setQuantidadeRecebida(parseInt(e.target.value) || 1)}
-            margin="normal"
-            inputProps={{ min: 1 }}
+            onChange={setQuantidadeRecebida}
+            min={1}
           />
         </DialogContent>
         <DialogActions>
