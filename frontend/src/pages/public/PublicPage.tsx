@@ -1,0 +1,282 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  TextField,
+  Typography,
+} from '@mui/material';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import LoginIcon from '@mui/icons-material/Login';
+import { produtoApi, configApi, reservaApi, getErrorMessage } from '../../api';
+import type { Produto, Configuracoes } from '../../types';
+import { useSnackbar } from '../../contexts/SnackbarContext';
+
+export function PublicPage() {
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [config, setConfig] = useState<Configuracoes>({ tituloLista: '', nomeBebe: '' });
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
+  const [nome, setNome] = useState('');
+  const [quantidade, setQuantidade] = useState(1);
+  const [mensagem, setMensagem] = useState('');
+  const { showMessage } = useSnackbar();
+
+  const loadData = useCallback(async () => {
+    try {
+      const [prodRes, configRes] = await Promise.all([
+        produtoApi.getAll(),
+        configApi.get(),
+      ]);
+      setProdutos(prodRes.data);
+      setConfig(configRes.data);
+    } catch (err) {
+      showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showMessage]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const progressoGeral = useMemo(() => {
+    const totalNecessario = produtos.reduce((s, p) => s + p.necessario, 0);
+    if (totalNecessario === 0) return 0;
+    const totalPossui = produtos.reduce((s, p) => s + p.possui, 0);
+    return Math.round((totalPossui / totalNecessario) * 100);
+  }, [produtos]);
+
+  const produtosPorCategoria = useMemo(() => {
+    const map = new Map<string, Produto[]>();
+    produtos.forEach((p) => {
+      const list = map.get(p.categoria) || [];
+      list.push(p);
+      map.set(p.categoria, list);
+    });
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [produtos]);
+
+  const openReserva = (produto: Produto) => {
+    if (produto.disponivel <= 0) {
+      showMessage('Este item não está disponível para reserva', 'info');
+      return;
+    }
+    setSelectedProduto(produto);
+    setNome('');
+    setQuantidade(1);
+    setMensagem('');
+    setDialogOpen(true);
+  };
+
+  const handleReserva = async () => {
+    if (!selectedProduto) return;
+    try {
+      await reservaApi.create({
+        produtoId: selectedProduto.id,
+        nome,
+        quantidade,
+        mensagem: mensagem || undefined,
+      });
+      showMessage('Reserva realizada com sucesso!');
+      setDialogOpen(false);
+      loadData();
+    } catch (err) {
+      showMessage(getErrorMessage(err), 'error');
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LinearProgress sx={{ width: '50%' }} />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pb: 6 }}>
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #E5C4D0 0%, #F2E0E8 100%)',
+          color: 'primary.dark',
+          py: { xs: 4, md: 6 },
+          mb: 4,
+        }}
+      >
+        <Container maxWidth="md">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box sx={{ textAlign: 'center', flex: 1 }}>
+              <ChildCareIcon sx={{ fontSize: 48, mb: 1 }} />
+              <Typography variant="h4" fontWeight={700} gutterBottom>
+                {config.tituloLista}
+              </Typography>
+              {config.nomeBebe && (
+                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                  {config.nomeBebe}
+                </Typography>
+              )}
+            </Box>
+            <Button
+              component={RouterLink}
+              to="/login"
+              startIcon={<LoginIcon />}
+              sx={{ color: 'primary.dark', borderColor: 'primary.dark' }}
+              variant="outlined"
+              size="small"
+            >
+              Admin
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+
+      <Container maxWidth="md">
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body1" fontWeight={600}>
+                Progresso do enxoval
+              </Typography>
+              <Typography variant="body1" fontWeight={700}>
+                {progressoGeral}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={progressoGeral}
+              sx={{ height: 12, borderRadius: 6 }}
+            />
+          </CardContent>
+        </Card>
+
+        {produtosPorCategoria.map(([categoria, items]) => (
+          <Box key={categoria} sx={{ mb: 4 }}>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+              {categoria}
+            </Typography>
+            {items.map((produto) => (
+              <Card key={produto.id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      justifyContent: 'space-between',
+                      alignItems: { xs: 'stretch', sm: 'center' },
+                      gap: 2,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="h6">{produto.nome}</Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        {produto.possui} / {produto.necessario}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={`Restam ${produto.faltam}`}
+                          size="small"
+                          color={produto.faltam === 0 ? 'success' : 'default'}
+                        />
+                        {produto.reservado > 0 && (
+                          <Chip
+                            label={`${produto.reservado} reservado(s)`}
+                            size="small"
+                            color="info"
+                          />
+                        )}
+                        <Chip
+                          label={`${produto.disponivel} disponível(is)`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      startIcon={<CardGiftcardIcon />}
+                      onClick={() => openReserva(produto)}
+                      disabled={produto.disponivel <= 0}
+                      sx={{ alignSelf: { xs: 'stretch', sm: 'center' }, whiteSpace: 'nowrap' }}
+                    >
+                      Vou Presentear
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        ))}
+
+        {produtos.length === 0 && (
+          <Typography color="text.secondary" textAlign="center">
+            Nenhum produto cadastrado ainda.
+          </Typography>
+        )}
+      </Container>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Reservar presente — {selectedProduto?.nome}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Disponível para reservar: {selectedProduto?.disponivel ?? 0}
+          </Typography>
+          <TextField
+            fullWidth
+            label="Seu nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Quantidade"
+            type="number"
+            value={quantidade}
+            onChange={(e) => setQuantidade(parseInt(e.target.value) || 1)}
+            margin="normal"
+            inputProps={{
+              min: 1,
+              max: selectedProduto?.disponivel ?? 1,
+            }}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Mensagem (opcional)"
+            value={mensagem}
+            onChange={(e) => setMensagem(e.target.value)}
+            margin="normal"
+            multiline
+            rows={2}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={handleReserva}
+            disabled={!nome.trim() || quantidade < 1}
+          >
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}

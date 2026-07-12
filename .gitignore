@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+data/database.json
+deploy/iis/site/web.config

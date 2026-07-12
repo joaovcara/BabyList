@@ -1,0 +1,38 @@
+# IIS fica na porta 80 do servidor; este stack NÃO deve publicar a porta 80.
+# O frontend expõe apenas uma porta interna (APP_PORT) para o IIS fazer reverse proxy.
+name: babylist
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: babylist-backend
+    environment:
+      PORT: 3002
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      DATABASE_PATH: /data/database.json
+    volumes:
+      - ./data:/data
+    expose:
+      - "3002"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3002/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: babylist-frontend
+    ports:
+      # 127.0.0.1: só o IIS (no mesmo servidor) acessa; evita conflito com outros containers na rede
+      - "127.0.0.1:${APP_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

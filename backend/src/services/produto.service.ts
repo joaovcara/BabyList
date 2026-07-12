@@ -1,0 +1,172 @@
+import { AppError } from '../errors/AppError.js';
+import { databaseRepository } from '../repositories/database.repository.js';
+import {
+  enriquecerProduto,
+  calcularProgressoGeral,
+  nextId,
+} from '../utils/calculations.js';
+import { DashboardData, Produto, ProdutoComDetalhes } from '../types/index.js';
+
+export class ProdutoService {
+  async findAll(): Promise<ProdutoComDetalhes[]> {
+    const db = await databaseRepository.read();
+    return db.produtos.map((p) => enriquecerProduto(p, db.reservas));
+  }
+
+  async findById(id: number): Promise<ProdutoComDetalhes> {
+    const db = await databaseRepository.read();
+    const produto = db.produtos.find((p) => p.id === id);
+    if (!produto) {
+      throw new AppError('Produto não encontrado', 404);
+    }
+    return enriquecerProduto(produto, db.reservas);
+  }
+
+  async create(data: Omit<Produto, 'id'>): Promise<ProdutoComDetalhes> {
+    this.validateQuantidades(data.necessario, data.possui);
+    await this.validateCategoria(data.categoria);
+
+    let created: Produto | undefined;
+
+    await databaseRepository.write((db) => {
+      if (!db.configuracoes.categorias.some(
+        (c) => c.toLowerCase() === data.categoria.trim().toLowerCase()
+      )) {
+        throw new AppError('Categoria inválida');
+      }
+
+      created = {
+        id: nextId(db.produtos),
+        nome: data.nome.trim(),
+        categoria: data.categoria.trim(),
+        necessario: data.necessario,
+        possui: data.possui,
+      };
+      db.produtos.push(created);
+    });
+
+    return this.findById(created!.id);
+  }
+
+  async update(id: number, data: Partial<Omit<Produto, 'id'>>): Promise<ProdutoComDetalhes> {
+    await databaseRepository.write((db) => {
+      const produto = db.produtos.find((p) => p.id === id);
+      if (!produto) {
+        throw new AppError('Produto não encontrado', 404);
+      }
+
+      if (data.nome !== undefined) produto.nome = data.nome.trim();
+      if (data.categoria !== undefined) {
+        if (!db.configuracoes.categorias.some(
+          (c) => c.toLowerCase() === data.categoria!.trim().toLowerCase()
+        )) {
+          throw new AppError('Categoria inválida');
+        }
+        produto.categoria = data.categoria.trim();
+      }
+
+      const necessario = data.necessario ?? produto.necessario;
+      const possui = data.possui ?? produto.possui;
+      this.validateQuantidades(necessario, possui);
+
+      const reservado = db.reservas
+        .filter((r) => r.produtoId === id)
+        .reduce((sum, r) => sum + r.quantidade, 0);
+
+      if (necessario - possui - reservado < 0) {
+        throw new AppError(
+          'Quantidade necessária não pode ser menor que possui + reservado',
+          400,
+          'INVALID_QUANTITY'
+        );
+      }
+
+      produto.necessario = necessario;
+      produto.possui = possui;
+    });
+
+    return this.findById(id);
+  }
+
+  async delete(id: number): Promise<void> {
+    await databaseRepository.write((db) => {
+      const produto = db.produtos.find((p) => p.id === id);
+      if (!produto) {
+        throw new AppError('Produto não encontrado', 404);
+      }
+
+      const hasReservas = db.reservas.some((r) => r.produtoId === id);
+      if (hasReservas) {
+        throw new AppError(
+          'Não é possível excluir produto com reservas ativas',
+          409,
+          'HAS_RESERVAS'
+        );
+      }
+
+      db.produtos = db.produtos.filter((p) => p.id !== id);
+    });
+  }
+
+  async receber(id: number, quantidade: number): Promise<ProdutoComDetalhes> {
+    if (!Number.isInteger(quantidade) || quantidade <= 0) {
+      throw new AppError('Quantidade recebida deve ser um número positivo');
+    }
+
+    await databaseRepository.write((db) => {
+      const produto = db.produtos.find((p) => p.id === id);
+      if (!produto) {
+        throw new AppError('Produto não encontrado', 404);
+      }
+
+      const novoPossui = Math.min(produto.possui + quantidade, produto.necessario);
+      produto.possui = novoPossui;
+    });
+
+    return this.findById(id);
+  }
+
+  private validateQuantidades(necessario: number, possui: number): void {
+    if (!Number.isInteger(necessario) || necessario < 0) {
+      throw new AppError('Quantidade necessária deve ser um número inteiro >= 0');
+    }
+    if (!Number.isInteger(possui) || possui < 0) {
+      throw new AppError('Quantidade possuída deve ser um número inteiro >= 0');
+    }
+    if (possui > necessario) {
+      throw new AppError('Quantidade possuída não pode ser maior que a necessária');
+    }
+  }
+
+  private async validateCategoria(categoria: string): Promise<void> {
+    if (!categoria?.trim()) {
+      throw new AppError('Categoria é obrigatória');
+    }
+  }
+}
+
+export class DashboardService {
+  async getDashboard(): Promise<DashboardData> {
+    const db = await databaseRepository.read();
+    const produtos = db.produtos.map((p) => enriquecerProduto(p, db.reservas));
+
+    const itensCompletos = produtos.filter((p) => p.status === 'completo').length;
+    const itensPendentes = produtos.length - itensCompletos;
+
+    const produtosFaltando = produtos
+      .filter((p) => p.faltam > 0)
+      .sort((a, b) => b.faltam - a.faltam);
+
+    return {
+      totalProdutos: produtos.length,
+      totalCategorias: db.configuracoes.categorias.length,
+      itensCompletos,
+      itensPendentes,
+      progressoGeral: calcularProgressoGeral(db.produtos),
+      produtosFaltando,
+    };
+  }
+}
+
+export const produtoService = new ProdutoService();
+export const dashboardService = new DashboardService();
