@@ -14,6 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { categoriaApi, getErrorMessage } from '../../api';
 import { CategoriaCard } from '../../components/admin/CategoriaCard';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function CategoriasPage() {
@@ -22,6 +23,8 @@ export function CategoriasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNome, setEditingNome] = useState<string | null>(null);
   const [nome, setNome] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { showMessage } = useSnackbar();
 
   const loadData = useCallback(async () => {
@@ -67,14 +70,22 @@ export function CategoriasPage() {
     }
   };
 
-  const handleDelete = async (cat: string) => {
-    if (!confirm(`Deseja excluir a categoria "${cat}"?`)) return;
+  const handleDelete = (cat: string) => {
+    setDeleteTarget(cat);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await categoriaApi.delete(cat);
+      await categoriaApi.delete(deleteTarget);
       showMessage('Categoria excluída');
+      setDeleteTarget(null);
       loadData();
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -122,6 +133,16 @@ export function CategoriasPage() {
           <Button variant="contained" onClick={handleSave}>Salvar</Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Excluir categoria"
+        message={`Deseja excluir a categoria "${deleteTarget ?? ''}"?`}
+        confirmLabel="Excluir"
+        loading={deleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

@@ -3,11 +3,14 @@ import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 import { reservaApi, getErrorMessage } from '../../api';
 import type { Reserva } from '../../types';
 import { ReservaCard } from '../../components/admin/ReservaCard';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function ReservasPage() {
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
+  const [canceling, setCanceling] = useState(false);
   const { showMessage } = useSnackbar();
 
   const loadData = useCallback(async () => {
@@ -25,16 +28,26 @@ export function ReservasPage() {
     loadData();
   }, [loadData]);
 
-  const handleCancel = async (id: number) => {
-    if (!confirm('Deseja cancelar esta reserva?')) return;
+  const handleCancel = (id: number) => {
+    setCancelTargetId(id);
+  };
+
+  const confirmCancel = async () => {
+    if (cancelTargetId === null) return;
+    setCanceling(true);
     try {
-      await reservaApi.delete(id);
+      await reservaApi.delete(cancelTargetId);
       showMessage('Reserva cancelada');
+      setCancelTargetId(null);
       loadData();
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setCanceling(false);
     }
   };
+
+  const cancelTarget = reservas.find((r) => r.id === cancelTargetId);
 
   return (
     <Box>
@@ -59,6 +72,20 @@ export function ReservasPage() {
           ))}
         </Grid>
       )}
+
+      <ConfirmDialog
+        open={cancelTargetId !== null}
+        title="Cancelar reserva"
+        message={
+          cancelTarget
+            ? `Deseja cancelar a reserva de ${cancelTarget.nome} para ${cancelTarget.produtoNome}?`
+            : 'Deseja cancelar esta reserva?'
+        }
+        confirmLabel="Cancelar reserva"
+        loading={canceling}
+        onClose={() => setCancelTargetId(null)}
+        onConfirm={confirmCancel}
+      />
     </Box>
   );
 }

@@ -19,6 +19,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { produtoApi, categoriaApi, tamanhoApi, getErrorMessage } from '../../api';
 import type { Produto } from '../../types';
 import { ProdutoAdminCard } from '../../components/admin/ProdutoAdminCard';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { QuantityInput } from '../../components/QuantityInput';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
@@ -45,6 +46,8 @@ export function ProdutosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProdutoForm>(emptyForm);
   const [quantidadeRecebida, setQuantidadeRecebida] = useState(1);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { showMessage } = useSnackbar();
 
   const loadData = useCallback(async () => {
@@ -119,14 +122,22 @@ export function ProdutosPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Deseja excluir este produto?')) return;
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTargetId === null) return;
+    setDeleting(true);
     try {
-      await produtoApi.delete(id);
+      await produtoApi.delete(deleteTargetId);
       showMessage('Produto excluído');
+      setDeleteTargetId(null);
       loadData();
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -295,6 +306,16 @@ export function ProdutosPage() {
           <Button variant="contained" onClick={handleReceber}>Salvar</Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTargetId !== null}
+        title="Excluir produto"
+        message="Deseja excluir este produto? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        loading={deleting}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }

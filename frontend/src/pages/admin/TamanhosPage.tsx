@@ -14,6 +14,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { tamanhoApi, getErrorMessage } from '../../api';
 import { TamanhoCard } from '../../components/admin/TamanhoCard';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function TamanhosPage() {
@@ -22,6 +23,8 @@ export function TamanhosPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNome, setEditingNome] = useState<string | null>(null);
   const [nome, setNome] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { showMessage } = useSnackbar();
 
   const loadData = useCallback(async () => {
@@ -67,14 +70,22 @@ export function TamanhosPage() {
     }
   };
 
-  const handleDelete = async (tamanho: string) => {
-    if (!confirm(`Deseja excluir o tamanho "${tamanho}"?`)) return;
+  const handleDelete = (tamanho: string) => {
+    setDeleteTarget(tamanho);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await tamanhoApi.delete(tamanho);
+      await tamanhoApi.delete(deleteTarget);
       showMessage('Tamanho excluído');
+      setDeleteTarget(null);
       loadData();
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -122,6 +133,16 @@ export function TamanhosPage() {
           <Button variant="contained" onClick={handleSave}>Salvar</Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Excluir tamanho"
+        message={`Deseja excluir o tamanho "${deleteTarget ?? ''}"?`}
+        confirmLabel="Excluir"
+        loading={deleting}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+      />
     </Box>
   );
 }
