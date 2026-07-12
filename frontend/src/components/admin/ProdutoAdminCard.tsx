@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import type { Produto } from '../../types';
 import { StatusChip } from '../StatusChip';
+import { formatProdutoLabel } from '../../utils/produto';
 
 interface ProdutoAdminCardProps {
   produto: Produto;
@@ -31,11 +32,16 @@ export function ProdutoAdminCard({
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1, mb: 1 }}>
           <Typography variant="h6" fontWeight={600} sx={{ flex: 1 }}>
-            {produto.nome}
+            {formatProdutoLabel(produto.nome, produto.tamanho)}
           </Typography>
           <StatusChip status={produto.status} />
         </Box>
-        <Chip label={produto.categoria} size="small" sx={{ mb: 2 }} />
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+          <Chip label={produto.categoria} size="small" />
+          {produto.tamanho && (
+            <Chip label={produto.tamanho} size="small" variant="outlined" />
+          )}
+        </Box>
         <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
           <Box>
             <Typography variant="caption" color="text.secondary">Necessário</Typography>

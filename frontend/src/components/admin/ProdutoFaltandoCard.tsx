@@ -1,6 +1,7 @@
 import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
 import type { Produto } from '../../types';
 import { StatusChip } from '../StatusChip';
+import { formatProdutoLabel } from '../../utils/produto';
 
 interface ProdutoFaltandoCardProps {
   produto: Produto;
@@ -13,7 +14,7 @@ export function ProdutoFaltandoCard({ produto }: ProdutoFaltandoCardProps) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="subtitle1" fontWeight={600}>
-              {produto.nome}
+              {formatProdutoLabel(produto.nome, produto.tamanho)}
             </Typography>
             <Chip label={produto.categoria} size="small" sx={{ mt: 0.5, mb: 1 }} />
             <Typography variant="body2" color="text.secondary">

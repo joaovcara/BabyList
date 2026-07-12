@@ -7,6 +7,7 @@ export interface Produto {
   id: number;
   nome: string;
   categoria: string;
+  tamanho?: string;
   necessario: number;
   possui: number;
   faltam: number;

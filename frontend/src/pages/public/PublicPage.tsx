@@ -22,16 +22,18 @@ import ChildCareIcon from '@mui/icons-material/ChildCare';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import LoginIcon from '@mui/icons-material/Login';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
-import { produtoApi, configApi, reservaApi, getErrorMessage } from '../../api';
+import { produtoApi, configApi, reservaApi, tamanhoApi, getErrorMessage } from '../../api';
 import { ContribuirModal } from '../../components/ContribuirModal';
 import { QuantityInput } from '../../components/QuantityInput';
 import type { Produto, Configuracoes } from '../../types';
+import { formatProdutoLabel, sortProdutosByTamanho } from '../../utils/produto';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function PublicPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [tamanhos, setTamanhos] = useState<string[]>([]);
   const [config, setConfig] = useState<Configuracoes>({ tituloLista: '', nomeBebe: '' });
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,12 +46,14 @@ export function PublicPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [prodRes, configRes] = await Promise.all([
+      const [prodRes, configRes, tamRes] = await Promise.all([
         produtoApi.getAll(),
         configApi.get(),
+        tamanhoApi.getAll(),
       ]);
       setProdutos(prodRes.data);
       setConfig(configRes.data);
+      setTamanhos(tamRes.data);
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
     } finally {
@@ -75,8 +79,10 @@ export function PublicPage() {
       list.push(p);
       map.set(p.categoria, list);
     });
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [produtos]);
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([categoria, items]) => [categoria, sortProdutosByTamanho(items, tamanhos)] as const);
+  }, [produtos, tamanhos]);
 
   const openReserva = (produto: Produto) => {
     if (produto.disponivel <= 0) {
@@ -254,7 +260,9 @@ export function PublicPage() {
                     }}
                   >
                     <Box>
-                      <Typography variant="h6">{produto.nome}</Typography>
+                      <Typography variant="h6">
+                        {formatProdutoLabel(produto.nome, produto.tamanho)}
+                      </Typography>
                       <Typography variant="body1" color="text.secondary">
                         {produto.possui} / {produto.necessario}
                       </Typography>
@@ -303,7 +311,7 @@ export function PublicPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Reservar presente — {selectedProduto?.nome}
+          Reservar presente — {selectedProduto ? formatProdutoLabel(selectedProduto.nome, selectedProduto.tamanho) : ''}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

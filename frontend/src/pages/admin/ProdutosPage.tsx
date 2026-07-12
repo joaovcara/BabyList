@@ -16,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { produtoApi, categoriaApi, getErrorMessage } from '../../api';
+import { produtoApi, categoriaApi, tamanhoApi, getErrorMessage } from '../../api';
 import type { Produto } from '../../types';
 import { ProdutoAdminCard } from '../../components/admin/ProdutoAdminCard';
 import { QuantityInput } from '../../components/QuantityInput';
@@ -25,18 +25,21 @@ import { useSnackbar } from '../../contexts/SnackbarContext';
 interface ProdutoForm {
   nome: string;
   categoria: string;
+  tamanho: string;
   necessario: number;
   possui: number;
 }
 
-const emptyForm: ProdutoForm = { nome: '', categoria: '', necessario: 0, possui: 0 };
+const emptyForm: ProdutoForm = { nome: '', categoria: '', tamanho: '', necessario: 0, possui: 0 };
 
 export function ProdutosPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
+  const [tamanhos, setTamanhos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [filtroTamanho, setFiltroTamanho] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [receberOpen, setReceberOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -46,12 +49,14 @@ export function ProdutosPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, tamRes] = await Promise.all([
         produtoApi.getAll(),
         categoriaApi.getAll(),
+        tamanhoApi.getAll(),
       ]);
       setProdutos(prodRes.data);
       setCategorias(catRes.data);
+      setTamanhos(tamRes.data);
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
     } finally {
@@ -67,9 +72,12 @@ export function ProdutosPage() {
     return produtos.filter((p) => {
       const matchSearch = p.nome.toLowerCase().includes(search.toLowerCase());
       const matchCat = !filtroCategoria || p.categoria === filtroCategoria;
-      return matchSearch && matchCat;
+      const matchTam =
+        !filtroTamanho ||
+        (filtroTamanho === '__sem__' ? !p.tamanho : p.tamanho === filtroTamanho);
+      return matchSearch && matchCat && matchTam;
     });
-  }, [produtos, search, filtroCategoria]);
+  }, [produtos, search, filtroCategoria, filtroTamanho]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -82,6 +90,7 @@ export function ProdutosPage() {
     setForm({
       nome: produto.nome,
       categoria: produto.categoria,
+      tamanho: produto.tamanho ?? '',
       necessario: produto.necessario,
       possui: produto.possui,
     });
@@ -168,6 +177,20 @@ export function ProdutosPage() {
             ))}
           </Select>
         </FormControl>
+        <FormControl size="small" sx={{ width: { xs: '100%', sm: 150 } }}>
+          <InputLabel>Tamanho</InputLabel>
+          <Select
+            value={filtroTamanho}
+            label="Tamanho"
+            onChange={(e) => setFiltroTamanho(e.target.value)}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="__sem__">Sem tamanho</MenuItem>
+            {tamanhos.map((t) => (
+              <MenuItem key={t} value={t}>{t}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -221,6 +244,19 @@ export function ProdutosPage() {
             >
               {categorias.map((c) => (
                 <MenuItem key={c} value={c}>{c}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Tamanho</InputLabel>
+            <Select
+              value={form.tamanho}
+              label="Tamanho"
+              onChange={(e) => setForm({ ...form, tamanho: e.target.value })}
+            >
+              <MenuItem value="">Sem tamanho</MenuItem>
+              {tamanhos.map((t) => (
+                <MenuItem key={t} value={t}>{t}</MenuItem>
               ))}
             </Select>
           </FormControl>

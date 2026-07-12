@@ -3,6 +3,7 @@ import { authController } from '../controllers/auth.controller.js';
 import { produtoController, dashboardController } from '../controllers/produto.controller.js';
 import { reservaController } from '../controllers/reserva.controller.js';
 import { categoriaController, configController } from '../controllers/categoria.controller.js';
+import { tamanhoController } from '../controllers/tamanho.controller.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { qrCodeUpload } from '../middleware/upload.js';
 
@@ -31,6 +32,12 @@ router.get('/categorias', (req, res, next) => categoriaController.findAll(req, r
 router.post('/categorias', authMiddleware, (req, res, next) => categoriaController.create(req, res, next));
 router.put('/categorias/:nome', authMiddleware, (req, res, next) => categoriaController.update(req, res, next));
 router.delete('/categorias/:nome', authMiddleware, (req, res, next) => categoriaController.delete(req, res, next));
+
+// Tamanhos
+router.get('/tamanhos', (req, res, next) => tamanhoController.findAll(req, res, next));
+router.post('/tamanhos', authMiddleware, (req, res, next) => tamanhoController.create(req, res, next));
+router.put('/tamanhos/:nome', authMiddleware, (req, res, next) => tamanhoController.update(req, res, next));
+router.delete('/tamanhos/:nome', authMiddleware, (req, res, next) => tamanhoController.delete(req, res, next));
 
 // Dashboard / Config
 router.get('/dashboard', authMiddleware, (req, res, next) => dashboardController.get(req, res, next));

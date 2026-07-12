@@ -8,6 +8,7 @@ import { PublicPage } from '../pages/public/PublicPage';
 import { DashboardPage } from '../pages/admin/DashboardPage';
 import { ProdutosPage } from '../pages/admin/ProdutosPage';
 import { CategoriasPage } from '../pages/admin/CategoriasPage';
+import { TamanhosPage } from '../pages/admin/TamanhosPage';
 import { ReservasPage } from '../pages/admin/ReservasPage';
 import { ConfiguracoesPage } from '../pages/admin/ConfiguracoesPage';
 
@@ -36,6 +37,7 @@ export function AppRoutes() {
           <Route index element={<DashboardPage />} />
           <Route path="produtos" element={<ProdutosPage />} />
           <Route path="categorias" element={<CategoriasPage />} />
+          <Route path="tamanhos" element={<TamanhosPage />} />
           <Route path="reservas" element={<ReservasPage />} />
           <Route path="configuracoes" element={<ConfiguracoesPage />} />
         </Route>

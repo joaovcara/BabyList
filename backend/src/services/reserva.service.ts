@@ -1,6 +1,7 @@
 import { AppError } from '../errors/AppError.js';
 import { databaseRepository } from '../repositories/database.repository.js';
 import { calcularDisponivel, nextId } from '../utils/calculations.js';
+import { formatProdutoLabel } from '../utils/produto.js';
 import { Reserva } from '../types/index.js';
 
 export interface ReservaComProduto extends Reserva {
@@ -14,7 +15,9 @@ export class ReservaService {
       const produto = db.produtos.find((p) => p.id === r.produtoId);
       return {
         ...r,
-        produtoNome: produto?.nome ?? 'Produto removido',
+        produtoNome: produto
+          ? formatProdutoLabel(produto.nome, produto.tamanho)
+          : 'Produto removido',
       };
     });
   }

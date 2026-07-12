@@ -25,6 +25,7 @@ const DEFAULT_DATABASE: Database = {
       'Brinquedos',
       'Outros',
     ],
+    tamanhos: ['RN', 'P', 'M', 'G', 'XG', 'XXG', 'Único'],
   },
 };
 
@@ -86,5 +87,9 @@ export class DatabaseRepository {
 export const databaseRepository = new DatabaseRepository();
 
 export function getDefaultConfig(): Configuracoes {
-  return { ...DEFAULT_DATABASE.configuracoes, categorias: [...DEFAULT_DATABASE.configuracoes.categorias] };
+  return {
+    ...DEFAULT_DATABASE.configuracoes,
+    categorias: [...DEFAULT_DATABASE.configuracoes.categorias],
+    tamanhos: [...DEFAULT_DATABASE.configuracoes.tamanhos],
+  };
 }

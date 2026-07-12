@@ -8,6 +8,7 @@ export interface Produto {
   id: number;
   nome: string;
   categoria: string;
+  tamanho?: string;
   necessario: number;
   possui: number;
 }
@@ -25,6 +26,7 @@ export interface Configuracoes {
   tituloLista: string;
   nomeBebe: string;
   categorias: string[];
+  tamanhos: string[];
   chavePix?: string;
   mensagemContribuicao?: string;
   qrCodePix?: string;

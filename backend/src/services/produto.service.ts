@@ -5,6 +5,7 @@ import {
   calcularProgressoGeral,
   nextId,
 } from '../utils/calculations.js';
+import { normalizeTamanho } from '../utils/produto.js';
 import { DashboardData, Produto, ProdutoComDetalhes } from '../types/index.js';
 
 export class ProdutoService {
@@ -23,6 +24,7 @@ export class ProdutoService {
   }
 
   async create(data: Omit<Produto, 'id'>): Promise<ProdutoComDetalhes> {
+    const tamanho = normalizeTamanho(data.tamanho);
     this.validateQuantidades(data.necessario, data.possui);
     await this.validateCategoria(data.categoria);
 
@@ -35,6 +37,9 @@ export class ProdutoService {
         throw new AppError('Categoria inválida');
       }
 
+      this.validateTamanhoInDb(db, tamanho);
+      this.validateUnicidadeInDb(db, data.nome.trim(), data.categoria.trim(), tamanho);
+
       created = {
         id: nextId(db.produtos),
         nome: data.nome.trim(),
@@ -42,6 +47,9 @@ export class ProdutoService {
         necessario: data.necessario,
         possui: data.possui,
       };
+      if (tamanho) {
+        created.tamanho = tamanho;
+      }
       db.produtos.push(created);
     });
 
@@ -64,6 +72,21 @@ export class ProdutoService {
         }
         produto.categoria = data.categoria.trim();
       }
+
+      if (data.tamanho !== undefined) {
+        const tamanho = normalizeTamanho(data.tamanho);
+        this.validateTamanhoInDb(db, tamanho);
+        if (tamanho) {
+          produto.tamanho = tamanho;
+        } else {
+          delete produto.tamanho;
+        }
+      }
+
+      const nome = produto.nome;
+      const categoria = produto.categoria;
+      const tamanho = normalizeTamanho(produto.tamanho);
+      this.validateUnicidadeInDb(db, nome, categoria, tamanho, id);
 
       const necessario = data.necessario ?? produto.necessario;
       const possui = data.possui ?? produto.possui;
@@ -141,6 +164,43 @@ export class ProdutoService {
   private async validateCategoria(categoria: string): Promise<void> {
     if (!categoria?.trim()) {
       throw new AppError('Categoria é obrigatória');
+    }
+  }
+
+  private validateTamanhoInDb(
+    db: Awaited<ReturnType<typeof databaseRepository.read>>,
+    tamanho: string
+  ): void {
+    if (!tamanho) return;
+
+    const tamanhos = db.configuracoes.tamanhos ?? [];
+    if (!tamanhos.some((t) => t.toLowerCase() === tamanho.toLowerCase())) {
+      throw new AppError('Tamanho inválido');
+    }
+  }
+
+  private validateUnicidadeInDb(
+    db: Awaited<ReturnType<typeof databaseRepository.read>>,
+    nome: string,
+    categoria: string,
+    tamanho: string,
+    excludeId?: number
+  ): void {
+    const duplicate = db.produtos.some((p) => {
+      if (excludeId !== undefined && p.id === excludeId) return false;
+      return (
+        p.nome.toLowerCase() === nome.toLowerCase() &&
+        p.categoria.toLowerCase() === categoria.toLowerCase() &&
+        normalizeTamanho(p.tamanho) === tamanho
+      );
+    });
+
+    if (duplicate) {
+      throw new AppError(
+        'Já existe um produto com este nome, categoria e tamanho',
+        409,
+        'DUPLICATE'
+      );
     }
   }
 }

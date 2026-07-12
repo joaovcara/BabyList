@@ -19,6 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import CategoryIcon from '@mui/icons-material/Category';
+import StraightenIcon from '@mui/icons-material/Straighten';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -33,6 +34,7 @@ const menuItems = [
   { path: '/admin', label: 'Dashboard', icon: <DashboardIcon /> },
   { path: '/admin/produtos', label: 'Produtos', icon: <InventoryIcon /> },
   { path: '/admin/categorias', label: 'Categorias', icon: <CategoryIcon /> },
+  { path: '/admin/tamanhos', label: 'Tamanhos', icon: <StraightenIcon /> },
   { path: '/admin/reservas', label: 'Reservas', icon: <CardGiftcardIcon /> },
   { path: '/admin/configuracoes', label: 'Configurações', icon: <SettingsIcon /> },
 ];

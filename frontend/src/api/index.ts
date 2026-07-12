@@ -48,6 +48,15 @@ export const categoriaApi = {
     api.delete<string[]>(`/categorias/${encodeURIComponent(nome)}`),
 };
 
+export const tamanhoApi = {
+  getAll: () => api.get<string[]>('/tamanhos'),
+  create: (nome: string) => api.post<string[]>('/tamanhos', { nome }),
+  update: (nomeAntigo: string, nome: string) =>
+    api.put<string[]>(`/tamanhos/${encodeURIComponent(nomeAntigo)}`, { nome }),
+  delete: (nome: string) =>
+    api.delete<string[]>(`/tamanhos/${encodeURIComponent(nome)}`),
+};
+
 export const dashboardApi = {
   get: () => api.get<DashboardData>('/dashboard'),
 };

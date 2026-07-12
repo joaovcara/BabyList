@@ -31,10 +31,11 @@ export class ProdutoController {
 
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { nome, categoria, necessario, possui } = req.body;
+      const { nome, categoria, tamanho, necessario, possui } = req.body;
       const produto = await produtoService.create({
         nome,
         categoria,
+        tamanho,
         necessario: necessario ?? 0,
         possui: possui ?? 0,
       });
