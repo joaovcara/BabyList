@@ -5,12 +5,13 @@ Este diretório contém os artefatos de build e deploy para servidor Windows com
 ## Arquitetura
 
 ```
-Internet → IIS :80 (web.config reverse proxy)
-              → 127.0.0.1:8081 (container nginx no host)
-                    → backend:3002 (rede Docker interna)
+Internet → IIS Default Web Site :80
+              → /BabyList/ (aplicação virtual + web.config)
+                    → 127.0.0.1:8081 (container nginx)
+                          → backend:3002 (rede Docker interna)
 ```
 
-O IIS **não** serve os arquivos do React diretamente. Ele apenas faz proxy para o container Docker.
+O frontend é buildado com `base: /BabyList/` para que assets e API usem o prefixo correto.
 
 ## Pré-requisitos no servidor
 
@@ -33,8 +34,9 @@ notepad .env
 | `JWT_SECRET` | Segredo forte para tokens JWT |
 | `APP_PORT` | Porta no host para o container (padrão: `8081`). **Não use 80** |
 | `IIS_SITE_PATH` | Pasta física do site IIS (ex: `C:\inetpub\babylist`) |
-| `IIS_DEPLOY_MODE` | `root` (site inteiro) ou `subfolder` (subpasta) |
-| `IIS_SUBPATH` | Nome da subpasta se `IIS_DEPLOY_MODE=subfolder` |
+| `IIS_DEPLOY_MODE` | `subfolder` (aplicação virtual, padrão) ou `root` (site dedicado) |
+| `IIS_SUBPATH` | Alias da aplicação no IIS (padrão: `BabyList`) |
+| `VITE_BASE_PATH` | Base path do build frontend (padrão: `/BabyList/`) |
 
 Verifique porta livre:
 
@@ -58,17 +60,16 @@ npm run deploy:build    # docker compose build
 npm run deploy:up       # docker compose up -d
 ```
 
-## Configurar o site no IIS
+## Configurar o IIS (aplicação virtual)
 
-1. Crie a pasta `C:\inetpub\babylist` (ou o valor de `IIS_SITE_PATH`)
-2. O script `deploy` copia o `web.config` automaticamente se `IIS_SITE_PATH` estiver definido
-3. No **IIS Manager**:
-   - Adicione um novo **Site** ou reconfigure o existente
-   - **Physical path**: `C:\inetpub\babylist`
-   - **Binding**: porta `80`, hostname desejado
+1. No **Default Web Site**, crie uma **Aplicação** chamada `BabyList` (mesmo nome de `IIS_SUBPATH`)
+2. **Physical path**: pasta com o `web.config` (valor de `IIS_SITE_PATH`)
+3. O script `deploy` copia o `web.config` automaticamente
 4. Teste:
-   - `http://127.0.0.1:8081` → container direto
-   - `http://seu-dominio/` → via IIS
+   - `http://127.0.0.1:8081/` → container direto (sem prefixo)
+   - `https://srv-web.ddns.net/BabyList/` → via IIS
+
+**Importante:** acesse sempre com o prefixo `/BabyList/`. A raiz do domínio (`/`) pertence ao site pai.
 
 ## Evitar conflito com outro Docker
 
@@ -83,7 +84,7 @@ npm run deploy:up       # docker compose up -d
 |---|---|
 | `deploy/iis/site/web.config` | Gerado a partir do `.env` (não editar manualmente) |
 | `deploy/iis/web.config.template` | Template para site na raiz |
-| `deploy/iis/web.config.subfolder.template` | Template para subpasta |
+| `deploy/iis/web.config.application.template` | Template para aplicação virtual IIS |
 
 ## Atualização
 

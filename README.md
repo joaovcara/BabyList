@@ -136,7 +136,7 @@ Para servidor com IIS na porta 80 e Docker (sem conflito com outros projetos):
 
 ```powershell
 copy .env.example .env
-# Edite: JWT_SECRET, APP_PORT (ex: 8081), IIS_SITE_PATH (ex: C:\inetpub\babylist)
+# Edite: JWT_SECRET, APP_PORT (8081), IIS_SUBPATH (BabyList)
 npm run deploy
 ```
 

@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { appPath } from '../config/app';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: appPath('/api'),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,11 +20,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
-      const isAdminRoute = window.location.pathname.startsWith('/admin');
+      const isAdminRoute = window.location.pathname.startsWith(appPath('/admin'));
       if (isAdminRoute) {
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
-        window.location.href = '/login';
+        window.location.href = appPath('/login');
       }
     }
     return Promise.reject(error);

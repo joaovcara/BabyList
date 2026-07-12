@@ -28,6 +28,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_BASE_PATH: /${IIS_SUBPATH:-BabyList}/
     container_name: babylist-frontend
     ports:
       # 127.0.0.1: só o IIS (no mesmo servidor) acessa; evita conflito com outros containers na rede

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  BabyList - IIS Reverse Proxy (site na raiz)
-  Gerado automaticamente por deploy/scripts/generate-webconfig.ps1
+  BabyList - IIS Reverse Proxy (aplicação virtual /__IIS_SUBPATH__)
+  Coloque este arquivo na pasta física da aplicação IIS (ex: /BabyList).
+  O IIS remove o prefixo da aplicação antes do rewrite.
+  Requer URL Rewrite + ARR com proxy habilitado.
 -->
 <configuration>
   <system.webServer>

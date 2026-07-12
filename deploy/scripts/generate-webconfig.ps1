@@ -33,10 +33,10 @@ $vars = Read-DotEnv -Path $envFile
 
 $appPort = if ($vars["APP_PORT"]) { $vars["APP_PORT"] } else { "8081" }
 $deployMode = if ($vars["IIS_DEPLOY_MODE"]) { $vars["IIS_DEPLOY_MODE"].ToLower() } else { "root" }
-$subpath = if ($vars["IIS_SUBPATH"]) { $vars["IIS_SUBPATH"].Trim("/") } else { "babylist" }
+$subpath = if ($vars["IIS_SUBPATH"]) { $vars["IIS_SUBPATH"].Trim("/") } else { "BabyList" }
 
 if ($deployMode -eq "subfolder") {
-    $templatePath = Join-Path $ProjectRoot "deploy\iis\web.config.subfolder.template"
+    $templatePath = Join-Path $ProjectRoot "deploy\iis\web.config.application.template"
 } else {
     $templatePath = Join-Path $ProjectRoot "deploy\iis\web.config.template"
 }
@@ -61,5 +61,5 @@ Write-Host "web.config gerado: $outFile"
 Write-Host "  APP_PORT     = $appPort"
 Write-Host "  DEPLOY_MODE  = $deployMode"
 if ($deployMode -eq "subfolder") {
-    Write-Host "  IIS_SUBPATH  = /$subpath"
+    Write-Host "  IIS_SUBPATH  = /$subpath (aplicacao virtual)"
 }

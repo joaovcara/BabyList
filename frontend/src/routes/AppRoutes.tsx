@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { getBasename } from '../config/app';
 import { ProtectedRoute } from './ProtectedRoute';
 import { GuestRoute, SetupRoute } from './GuestRoute';
 import { SetupPage } from '../pages/setup/SetupPage';
@@ -12,7 +13,7 @@ import { ConfiguracoesPage } from '../pages/admin/ConfiguracoesPage';
 
 export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={getBasename()}>
       <Routes>
         <Route path="/" element={<PublicPage />} />
         <Route
