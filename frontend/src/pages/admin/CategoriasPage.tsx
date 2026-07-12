@@ -2,21 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
+  Grid,
   TextField,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { categoriaApi, getErrorMessage } from '../../api';
+import { CategoriaCard } from '../../components/admin/CategoriaCard';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function CategoriasPage() {
@@ -90,32 +87,23 @@ export function CategoriasPage() {
         </Button>
       </Box>
 
-      <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
-        {loading ? (
-          <ListItem>
-            <ListItemText primary="Carregando..." />
-          </ListItem>
-        ) : (
-          categorias.map((cat) => (
-            <ListItem
-              key={cat}
-              divider
-              secondaryAction={
-                <Box>
-                  <IconButton onClick={() => openEdit(cat)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(cat)} color="error">
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              }
-            >
-              <ListItemText primary={cat} />
-            </ListItem>
-          ))
-        )}
-      </List>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : categorias.length === 0 ? (
+        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+          Nenhuma categoria cadastrada.
+        </Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {categorias.map((cat) => (
+            <Grid item xs={12} sm={6} md={4} key={cat}>
+              <CategoriaCard nome={cat} onEdit={openEdit} onDelete={handleDelete} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{editingNome ? 'Editar categoria' : 'Nova categoria'}</DialogTitle>

@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
-import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import DeleteIcon from '@mui/icons-material/Delete';
-import dayjs from 'dayjs';
+import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 import { reservaApi, getErrorMessage } from '../../api';
 import type { Reserva } from '../../types';
+import { ReservaCard } from '../../components/admin/ReservaCard';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function ReservasPage() {
@@ -38,50 +36,29 @@ export function ReservasPage() {
     }
   };
 
-  const columns: GridColDef[] = [
-    { field: 'nome', headerName: 'Nome', flex: 1, minWidth: 120 },
-    { field: 'produtoNome', headerName: 'Produto', flex: 1, minWidth: 150 },
-    { field: 'quantidade', headerName: 'Qtd', width: 80, type: 'number' },
-    {
-      field: 'data',
-      headerName: 'Data',
-      width: 150,
-      valueFormatter: (value: string) => dayjs(value).format('DD/MM/YYYY HH:mm'),
-    },
-    { field: 'mensagem', headerName: 'Mensagem', flex: 1, minWidth: 150 },
-    {
-      field: 'acoes',
-      headerName: 'Ações',
-      width: 80,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton
-          size="small"
-          color="error"
-          onClick={() => handleCancel(params.row.id)}
-          title="Cancelar"
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      ),
-    },
-  ];
-
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 2 }}>
         Reservas de presentes
       </Typography>
-      <DataGrid
-        rows={reservas}
-        columns={columns}
-        loading={loading}
-        autoHeight
-        pageSizeOptions={[10, 25]}
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        disableRowSelectionOnClick
-        sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
-      />
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : reservas.length === 0 ? (
+        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+          Nenhuma reserva registrada.
+        </Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {reservas.map((reserva) => (
+            <Grid item xs={12} key={reserva.id}>
+              <ReservaCard reserva={reserva} onCancel={handleCancel} />
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 }

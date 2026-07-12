@@ -2,26 +2,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
-  IconButton,
+  Grid,
   InputLabel,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from '@mui/material';
-import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { produtoApi, categoriaApi, getErrorMessage } from '../../api';
 import type { Produto } from '../../types';
-import { StatusChip } from '../../components/StatusChip';
+import { ProdutoAdminCard } from '../../components/admin/ProdutoAdminCard';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 interface ProdutoForm {
@@ -135,42 +132,18 @@ export function ProdutosPage() {
     }
   };
 
-  const columns: GridColDef[] = [
-    { field: 'nome', headerName: 'Nome', flex: 1, minWidth: 150 },
-    { field: 'categoria', headerName: 'Categoria', width: 130 },
-    { field: 'necessario', headerName: 'Necessário', width: 100, type: 'number' },
-    { field: 'possui', headerName: 'Possui', width: 90, type: 'number' },
-    { field: 'faltam', headerName: 'Faltam', width: 90, type: 'number' },
-    {
-      field: 'status',
-      headerName: 'Status',
-      width: 130,
-      renderCell: (params) => <StatusChip status={params.value} />,
-    },
-    {
-      field: 'acoes',
-      headerName: 'Ações',
-      width: 160,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton size="small" onClick={() => openReceber(params.row)} title="Recebi">
-            <CardGiftcardIcon fontSize="small" color="primary" />
-          </IconButton>
-          <IconButton size="small" onClick={() => openEdit(params.row)} title="Editar">
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={() => handleDelete(params.row.id)} title="Excluir">
-            <DeleteIcon fontSize="small" color="error" />
-          </IconButton>
-        </Box>
-      ),
-    },
-  ];
-
   return (
     <Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 2,
+          alignItems: { xs: 'stretch', sm: 'center' },
+        }}
+      >
         <Typography variant="h5" sx={{ flexGrow: 1 }}>
           Produtos
         </Typography>
@@ -179,9 +152,9 @@ export function ProdutosPage() {
           placeholder="Pesquisar..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ minWidth: 180 }}
+          sx={{ width: { xs: '100%', sm: 180 } }}
         />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ width: { xs: '100%', sm: 150 } }}>
           <InputLabel>Categoria</InputLabel>
           <Select
             value={filtroCategoria}
@@ -194,21 +167,38 @@ export function ProdutosPage() {
             ))}
           </Select>
         </FormControl>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={openCreate}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
           Novo
         </Button>
       </Box>
 
-      <DataGrid
-        rows={filtered}
-        columns={columns}
-        loading={loading}
-        autoHeight
-        pageSizeOptions={[10, 25, 50]}
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        disableRowSelectionOnClick
-        sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
-      />
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : filtered.length === 0 ? (
+        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+          Nenhum produto encontrado.
+        </Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {filtered.map((produto) => (
+            <Grid item xs={12} key={produto.id}>
+              <ProdutoAdminCard
+                produto={produto}
+                onReceber={openReceber}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{editingId ? 'Editar produto' : 'Novo produto'}</DialogTitle>

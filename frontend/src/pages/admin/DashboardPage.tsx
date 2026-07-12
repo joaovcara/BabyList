@@ -5,9 +5,6 @@ import {
   CardContent,
   CircularProgress,
   Grid,
-  List,
-  ListItem,
-  ListItemText,
   Typography,
 } from '@mui/material';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -17,7 +14,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import { dashboardApi, getErrorMessage } from '../../api';
 import type { DashboardData } from '../../types';
 import { ProgressCard } from '../../components/ProgressCard';
-import { StatusChip } from '../../components/StatusChip';
+import { ProdutoFaltandoCard } from '../../components/admin/ProdutoFaltandoCard';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 function StatCard({
@@ -139,17 +136,13 @@ export function DashboardPage() {
               Parabéns! Todos os itens estão completos.
             </Typography>
           ) : (
-            <List>
+            <Grid container spacing={1.5}>
               {data.produtosFaltando.map((p) => (
-                <ListItem key={p.id} divider>
-                  <ListItemText
-                    primary={p.nome}
-                    secondary={`${p.categoria} — faltam ${p.faltam} de ${p.necessario}`}
-                  />
-                  <StatusChip status={p.status} />
-                </ListItem>
+                <Grid item xs={12} key={p.id}>
+                  <ProdutoFaltandoCard produto={p} />
+                </Grid>
               ))}
-            </List>
+            </Grid>
           )}
         </CardContent>
       </Card>

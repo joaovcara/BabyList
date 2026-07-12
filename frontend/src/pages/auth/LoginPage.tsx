@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -9,8 +9,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ChildCareIcon from '@mui/icons-material/ChildCare';
 import { useAuth } from '../../contexts/AuthContext';
+import PublicIcon from '@mui/icons-material/Public';
+import ChildCareIcon from '@mui/icons-material/ChildCare';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { getErrorMessage } from '../../api';
 
@@ -83,6 +84,17 @@ export function LoginPage() {
                 sx={{ mt: 3 }}
               >
                 Entrar
+              </Button>
+              <Button
+                fullWidth
+                component={RouterLink}
+                to="/"
+                variant="outlined"
+                size="large"
+                startIcon={<PublicIcon />}
+                sx={{ mt: 2 }}
+              >
+                Lista pública
               </Button>
             </form>
           </CardContent>

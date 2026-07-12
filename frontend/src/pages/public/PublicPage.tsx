@@ -11,9 +11,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   LinearProgress,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
@@ -23,6 +26,8 @@ import type { Produto, Configuracoes } from '../../types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 
 export function PublicPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [config, setConfig] = useState<Configuracoes>({ tituloLista: '', nomeBebe: '' });
   const [loading, setLoading] = useState(true);
@@ -117,28 +122,57 @@ export function PublicPage() {
         }}
       >
         <Container maxWidth="md">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Box sx={{ textAlign: 'center', flex: 1 }}>
-              <ChildCareIcon sx={{ fontSize: 48, mb: 1 }} />
-              <Typography variant="h4" fontWeight={700} gutterBottom>
+          <Box sx={{ position: 'relative', px: { xs: 5, sm: 0 } }}>
+            <Box sx={{ textAlign: 'center', width: '100%' }}>
+              <ChildCareIcon sx={{ fontSize: { xs: 40, md: 48 }, mb: 1 }} />
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                gutterBottom
+                sx={{ fontSize: { xs: '1.5rem', md: '2.125rem' } }}
+              >
                 {config.tituloLista}
               </Typography>
               {config.nomeBebe && (
-                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                <Typography variant="h6" sx={{ opacity: 0.9, fontSize: { xs: '1rem', md: '1.25rem' } }}>
                   {config.nomeBebe}
                 </Typography>
               )}
             </Box>
-            <Button
-              component={RouterLink}
-              to="/login"
-              startIcon={<LoginIcon />}
-              sx={{ color: 'primary.dark', borderColor: 'primary.dark' }}
-              variant="outlined"
-              size="small"
-            >
-              Admin
-            </Button>
+            {isMobile ? (
+              <IconButton
+                component={RouterLink}
+                to="/login"
+                aria-label="Admin"
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  color: 'primary.dark',
+                  border: '1px solid',
+                  borderColor: 'primary.dark',
+                }}
+              >
+                <LoginIcon />
+              </IconButton>
+            ) : (
+              <Button
+                component={RouterLink}
+                to="/login"
+                startIcon={<LoginIcon />}
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  color: 'primary.dark',
+                  borderColor: 'primary.dark',
+                }}
+                variant="outlined"
+                size="small"
+              >
+                Admin
+              </Button>
+            )}
           </Box>
         </Container>
       </Box>
