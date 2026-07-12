@@ -14,7 +14,7 @@ FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3002
 ENV DATABASE_PATH=/data/database.json
 
 COPY package.json package-lock.json* ./
@@ -24,6 +24,6 @@ COPY --from=builder /app/dist ./dist
 
 RUN mkdir -p /data
 
-EXPOSE 3001
+EXPOSE 3002
 
 CMD ["node", "dist/index.js"]

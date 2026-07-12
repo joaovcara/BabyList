@@ -42,7 +42,7 @@ docker compose --env-file .env up -d
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Ler APP_PORT do .env para mensagem final
-$appPort = "8080"
+$appPort = "8081"
 Get-Content ".env" | ForEach-Object {
     if ($_ -match '^\s*APP_PORT\s*=\s*(.+)$') { $appPort = $Matches[1].Trim() }
 }

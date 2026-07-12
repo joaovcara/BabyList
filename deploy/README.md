@@ -6,8 +6,8 @@ Este diretório contém os artefatos de build e deploy para servidor Windows com
 
 ```
 Internet → IIS :80 (web.config reverse proxy)
-              → 127.0.0.1:APP_PORT (container nginx)
-                    → backend:3001 (rede Docker interna)
+              → 127.0.0.1:8081 (container nginx no host)
+                    → backend:3002 (rede Docker interna)
 ```
 
 O IIS **não** serve os arquivos do React diretamente. Ele apenas faz proxy para o container Docker.
@@ -31,7 +31,7 @@ notepad .env
 | Variável | Descrição |
 |---|---|
 | `JWT_SECRET` | Segredo forte para tokens JWT |
-| `APP_PORT` | Porta no host para o container (ex: `8080`). **Não use 80** |
+| `APP_PORT` | Porta no host para o container (padrão: `8081`). **Não use 80** |
 | `IIS_SITE_PATH` | Pasta física do site IIS (ex: `C:\inetpub\babylist`) |
 | `IIS_DEPLOY_MODE` | `root` (site inteiro) ou `subfolder` (subpasta) |
 | `IIS_SUBPATH` | Nome da subpasta se `IIS_DEPLOY_MODE=subfolder` |
@@ -39,7 +39,7 @@ notepad .env
 Verifique porta livre:
 
 ```powershell
-netstat -ano | findstr :8080
+netstat -ano | findstr :8081
 ```
 
 ## Deploy
@@ -67,7 +67,7 @@ npm run deploy:up       # docker compose up -d
    - **Physical path**: `C:\inetpub\babylist`
    - **Binding**: porta `80`, hostname desejado
 4. Teste:
-   - `http://127.0.0.1:8080` → container direto
+   - `http://127.0.0.1:8081` → container direto
    - `http://seu-dominio/` → via IIS
 
 ## Evitar conflito com outro Docker

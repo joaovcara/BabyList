@@ -33,7 +33,7 @@ cp .env.example .env   # ajuste JWT_SECRET se necessário
 npm run docker:up
 ```
 
-A aplicação ficará disponível em **http://localhost:8080** (porta configurável via `APP_PORT` no `.env`).
+A aplicação ficará disponível em **http://localhost:8081** (porta configurável via `APP_PORT` no `.env`).
 
 Comandos úteis:
 
@@ -48,7 +48,7 @@ O arquivo `data/database.json` é persistido na pasta `./data` do host via volum
 
 | Container | Descrição |
 |---|---|
-| `babylist-backend` | API Express na porta interna 3001 |
+| `babylist-backend` | API Express na porta interna 3002 |
 | `babylist-frontend` | Nginx servindo o React e fazendo proxy de `/api` para o backend |
 
 ## Instalação (desenvolvimento local)
@@ -71,7 +71,7 @@ Variáveis disponíveis:
 
 | Variável | Descrição | Padrão |
 |---|---|---|
-| `PORT` | Porta da API | `3001` |
+| `PORT` | Porta da API | `3002` |
 | `JWT_SECRET` | Segredo para tokens JWT | *(obrigatório em produção)* |
 | `DATABASE_PATH` | Caminho do `database.json` | `../data/database.json` |
 
@@ -85,7 +85,7 @@ npm run dev
 Ou separadamente:
 
 ```bash
-cd backend && npm run dev   # http://localhost:3001
+cd backend && npm run dev   # http://localhost:3002
 cd frontend && npm run dev  # http://localhost:5173
 ```
 
@@ -112,7 +112,7 @@ O frontend usa proxy do Vite: requisições `/api` são encaminhadas para o back
 
 ## API
 
-Base: `http://localhost:3001/api`
+Base: `http://localhost:3002/api` *(dev local)* ou `http://localhost:8081/api` *(Docker)*
 
 - `GET /setup/status` – verifica se precisa de setup
 - `POST /setup` – cadastra admin
@@ -136,7 +136,7 @@ Para servidor com IIS na porta 80 e Docker (sem conflito com outros projetos):
 
 ```powershell
 copy .env.example .env
-# Edite: JWT_SECRET, APP_PORT (ex: 8080), IIS_SITE_PATH (ex: C:\inetpub\babylist)
+# Edite: JWT_SECRET, APP_PORT (ex: 8081), IIS_SITE_PATH (ex: C:\inetpub\babylist)
 npm run deploy
 ```
 

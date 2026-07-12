@@ -31,7 +31,7 @@ function Read-DotEnv {
 $envFile = Join-Path $ProjectRoot ".env"
 $vars = Read-DotEnv -Path $envFile
 
-$appPort = if ($vars["APP_PORT"]) { $vars["APP_PORT"] } else { "8080" }
+$appPort = if ($vars["APP_PORT"]) { $vars["APP_PORT"] } else { "8081" }
 $deployMode = if ($vars["IIS_DEPLOY_MODE"]) { $vars["IIS_DEPLOY_MODE"].ToLower() } else { "root" }
 $subpath = if ($vars["IIS_SUBPATH"]) { $vars["IIS_SUBPATH"].Trim("/") } else { "babylist" }
 
