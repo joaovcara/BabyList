@@ -42,6 +42,7 @@ export function PublicPage() {
   const [nome, setNome] = useState('');
   const [quantidade, setQuantidade] = useState(1);
   const [mensagem, setMensagem] = useState('');
+  const [search, setSearch] = useState('');
   const { showMessage } = useSnackbar();
 
   const loadData = useCallback(async () => {
@@ -72,9 +73,23 @@ export function PublicPage() {
     return Math.round((totalPossui / totalNecessario) * 100);
   }, [produtos]);
 
+  const produtosFiltrados = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return produtos;
+    return produtos.filter((p) => {
+      const label = formatProdutoLabel(p.nome, p.tamanho).toLowerCase();
+      return (
+        label.includes(term) ||
+        p.nome.toLowerCase().includes(term) ||
+        p.categoria.toLowerCase().includes(term) ||
+        (p.tamanho?.toLowerCase().includes(term) ?? false)
+      );
+    });
+  }, [produtos, search]);
+
   const produtosPorCategoria = useMemo(() => {
     const map = new Map<string, Produto[]>();
-    produtos.forEach((p) => {
+    produtosFiltrados.forEach((p) => {
       const list = map.get(p.categoria) || [];
       list.push(p);
       map.set(p.categoria, list);
@@ -82,7 +97,7 @@ export function PublicPage() {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([categoria, items]) => [categoria, sortProdutosByTamanho(items, tamanhos)] as const);
-  }, [produtos, tamanhos]);
+  }, [produtosFiltrados, tamanhos]);
 
   const openReserva = (produto: Produto) => {
     if (produto.disponivel <= 0) {
@@ -242,6 +257,15 @@ export function PublicPage() {
           </CardContent>
         </Card>
 
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Pesquisar..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          sx={{ mb: 3 }}
+        />
+
         {produtosPorCategoria.map(([categoria, items]) => (
           <Box key={categoria} sx={{ mb: 4 }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
@@ -302,9 +326,11 @@ export function PublicPage() {
           </Box>
         ))}
 
-        {produtos.length === 0 && (
+        {produtosPorCategoria.length === 0 && (
           <Typography color="text.secondary" textAlign="center">
-            Nenhum produto cadastrado ainda.
+            {produtos.length === 0
+              ? 'Nenhum produto cadastrado ainda.'
+              : 'Nenhum produto encontrado.'}
           </Typography>
         )}
       </Container>
