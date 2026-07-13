@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -340,6 +341,10 @@ export function PublicPage() {
           Reservar presente — {selectedProduto ? formatProdutoLabel(selectedProduto.nome, selectedProduto.tamanho) : ''}
         </DialogTitle>
         <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Esta reserva é só um controle para os pais. Você precisa comprar o presente e entregar.
+            A plataforma não realiza compra nem envio.
+          </Alert>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Disponível para reservar: {selectedProduto?.disponivel ?? 0}
           </Typography>
