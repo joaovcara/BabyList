@@ -57,6 +57,14 @@ export function ProdutoAdminCard({
               {produto.faltam}
             </Typography>
           </Box>
+          {produto.possui > produto.necessario && (
+            <Box>
+              <Typography variant="caption" color="text.secondary">Excedente</Typography>
+              <Typography fontWeight={600} color="info.main">
+                {produto.possui - produto.necessario}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </CardContent>
       <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>

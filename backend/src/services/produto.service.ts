@@ -25,7 +25,7 @@ export class ProdutoService {
 
   async create(data: Omit<Produto, 'id'>): Promise<ProdutoComDetalhes> {
     const tamanho = normalizeTamanho(data.tamanho);
-    this.validateQuantidades(data.necessario, data.possui);
+    this.validateQuantidades(data.necessario, data.possui, { capPossui: true });
     await this.validateCategoria(data.categoria);
 
     let created: Produto | undefined;
@@ -90,15 +90,15 @@ export class ProdutoService {
 
       const necessario = data.necessario ?? produto.necessario;
       const possui = data.possui ?? produto.possui;
-      this.validateQuantidades(necessario, possui);
+      this.validateQuantidades(necessario, possui, { capPossui: false });
 
       const reservado = db.reservas
         .filter((r) => r.produtoId === id)
         .reduce((sum, r) => sum + r.quantidade, 0);
 
-      if (necessario - possui - reservado < 0) {
+      if (necessario < reservado) {
         throw new AppError(
-          'Quantidade necessária não pode ser menor que possui + reservado',
+          'Quantidade necessária não pode ser menor que a quantidade reservada',
           400,
           'INVALID_QUANTITY'
         );
@@ -142,21 +142,24 @@ export class ProdutoService {
         throw new AppError('Produto não encontrado', 404);
       }
 
-      const novoPossui = Math.min(produto.possui + quantidade, produto.necessario);
-      produto.possui = novoPossui;
+      produto.possui = produto.possui + quantidade;
     });
 
     return this.findById(id);
   }
 
-  private validateQuantidades(necessario: number, possui: number): void {
+  private validateQuantidades(
+    necessario: number,
+    possui: number,
+    options: { capPossui: boolean } = { capPossui: true }
+  ): void {
     if (!Number.isInteger(necessario) || necessario < 0) {
       throw new AppError('Quantidade necessária deve ser um número inteiro >= 0');
     }
     if (!Number.isInteger(possui) || possui < 0) {
       throw new AppError('Quantidade possuída deve ser um número inteiro >= 0');
     }
-    if (possui > necessario) {
+    if (options.capPossui && possui > necessario) {
       throw new AppError('Quantidade possuída não pode ser maior que a necessária');
     }
   }

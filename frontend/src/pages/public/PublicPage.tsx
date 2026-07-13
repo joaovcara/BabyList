@@ -236,7 +236,7 @@ export function PublicPage() {
             </Box>
             <LinearProgress
               variant="determinate"
-              value={progressoGeral}
+              value={Math.min(100, progressoGeral)}
               sx={{ height: 12, borderRadius: 6 }}
             />
           </CardContent>

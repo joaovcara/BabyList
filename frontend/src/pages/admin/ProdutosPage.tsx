@@ -46,6 +46,7 @@ export function ProdutosPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ProdutoForm>(emptyForm);
   const [quantidadeRecebida, setQuantidadeRecebida] = useState(1);
+  const [receberTarget, setReceberTarget] = useState<Produto | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { showMessage } = useSnackbar();
@@ -102,6 +103,7 @@ export function ProdutosPage() {
 
   const openReceber = (produto: Produto) => {
     setEditingId(produto.id);
+    setReceberTarget(produto);
     setQuantidadeRecebida(1);
     setReceberOpen(true);
   };
@@ -144,9 +146,10 @@ export function ProdutosPage() {
   const handleReceber = async () => {
     if (!editingId) return;
     try {
-      await produtoApi.receber(editingId, quantidadeRecebida);
-      showMessage('Presente registrado');
+      const res = await produtoApi.receber(editingId, quantidadeRecebida);
+      showMessage(`Presente registrado — total: ${res.data.possui}`);
       setReceberOpen(false);
+      setReceberTarget(null);
       loadData();
     } catch (err) {
       showMessage(getErrorMessage(err), 'error');
@@ -282,7 +285,7 @@ export function ProdutosPage() {
             value={form.possui}
             onChange={(possui) => setForm({ ...form, possui })}
             min={0}
-            max={form.necessario}
+            max={editingId ? Math.max(form.necessario, form.possui) : form.necessario}
           />
         </DialogContent>
         <DialogActions>
@@ -291,9 +294,23 @@ export function ProdutosPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={receberOpen} onClose={() => setReceberOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={receberOpen}
+        onClose={() => {
+          setReceberOpen(false);
+          setReceberTarget(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>Recebi presente</DialogTitle>
         <DialogContent>
+          {receberTarget && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Necessário {receberTarget.necessario} · Possui {receberTarget.possui} · Faltam{' '}
+              {receberTarget.faltam}
+            </Typography>
+          )}
           <QuantityInput
             label="Quantidade recebida"
             value={quantidadeRecebida}
@@ -302,7 +319,14 @@ export function ProdutosPage() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setReceberOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={() => {
+              setReceberOpen(false);
+              setReceberTarget(null);
+            }}
+          >
+            Cancelar
+          </Button>
           <Button variant="contained" onClick={handleReceber}>Salvar</Button>
         </DialogActions>
       </Dialog>
