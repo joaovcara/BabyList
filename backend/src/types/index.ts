@@ -13,13 +13,21 @@ export interface Produto {
   possui: number;
 }
 
+export type ReservaStatus = 'ativa' | 'concluida' | 'cancelada';
+
 export interface Reserva {
   id: number;
   produtoId: number;
   nome: string;
   quantidade: number;
+  quantidadeReservada: number;
+  quantidadeEntregueParcial: number;
+  quantidadeEntregue?: number;
   mensagem: string;
   data: string;
+  status: ReservaStatus;
+  dataEntrega?: string;
+  dataCancelamento?: string;
 }
 
 export interface Configuracoes {

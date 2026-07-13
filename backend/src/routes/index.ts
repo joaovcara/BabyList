@@ -25,6 +25,7 @@ router.patch('/produtos/:id/receber', authMiddleware, (req, res, next) => produt
 // Reservas
 router.get('/reservas', authMiddleware, (req, res, next) => reservaController.findAll(req, res, next));
 router.post('/reservas', (req, res, next) => reservaController.create(req, res, next));
+router.patch('/reservas/:id/confirmar', authMiddleware, (req, res, next) => reservaController.confirmar(req, res, next));
 router.delete('/reservas/:id', authMiddleware, (req, res, next) => reservaController.delete(req, res, next));
 
 // Categorias

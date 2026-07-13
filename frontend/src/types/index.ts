@@ -16,13 +16,21 @@ export interface Produto {
   status: 'completo' | 'falta_pouco' | 'falta_bastante';
 }
 
+export type ReservaStatus = 'ativa' | 'concluida' | 'cancelada';
+
 export interface Reserva {
   id: number;
   produtoId: number;
   nome: string;
   quantidade: number;
+  quantidadeReservada: number;
+  quantidadeEntregueParcial: number;
+  quantidadeEntregue?: number;
   mensagem: string;
   data: string;
+  status: ReservaStatus;
+  dataEntrega?: string;
+  dataCancelamento?: string;
   produtoNome: string;
 }
 

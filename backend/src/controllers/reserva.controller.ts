@@ -39,6 +39,17 @@ export class ReservaController {
       next(err);
     }
   }
+
+  async confirmar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const id = paramId(req.params.id);
+      const { quantidadeRecebida } = req.body;
+      const reserva = await reservaService.confirmar(id, quantidadeRecebida);
+      res.json(reserva);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const reservaController = new ReservaController();

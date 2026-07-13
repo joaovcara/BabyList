@@ -1,8 +1,12 @@
 import { Produto, ProdutoComDetalhes, ProdutoStatus, Reserva } from '../types/index.js';
 
+export function isReservaAtiva(r: Reserva): boolean {
+  return (r.status ?? 'ativa') === 'ativa';
+}
+
 export function calcularReservado(produtoId: number, reservas: Reserva[]): number {
   return reservas
-    .filter((r) => r.produtoId === produtoId)
+    .filter((r) => r.produtoId === produtoId && isReservaAtiva(r))
     .reduce((sum, r) => sum + r.quantidade, 0);
 }
 

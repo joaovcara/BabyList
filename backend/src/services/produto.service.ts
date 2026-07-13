@@ -3,6 +3,7 @@ import { databaseRepository } from '../repositories/database.repository.js';
 import {
   enriquecerProduto,
   calcularProgressoGeral,
+  isReservaAtiva,
   nextId,
 } from '../utils/calculations.js';
 import { normalizeTamanho } from '../utils/produto.js';
@@ -93,7 +94,7 @@ export class ProdutoService {
       this.validateQuantidades(necessario, possui, { capPossui: false });
 
       const reservado = db.reservas
-        .filter((r) => r.produtoId === id)
+        .filter((r) => r.produtoId === id && isReservaAtiva(r))
         .reduce((sum, r) => sum + r.quantidade, 0);
 
       if (necessario < reservado) {
@@ -118,7 +119,7 @@ export class ProdutoService {
         throw new AppError('Produto não encontrado', 404);
       }
 
-      const hasReservas = db.reservas.some((r) => r.produtoId === id);
+      const hasReservas = db.reservas.some((r) => r.produtoId === id && isReservaAtiva(r));
       if (hasReservas) {
         throw new AppError(
           'Não é possível excluir produto com reservas ativas',

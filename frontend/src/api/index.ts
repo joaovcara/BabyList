@@ -36,6 +36,8 @@ export const reservaApi = {
     quantidade: number;
     mensagem?: string;
   }) => api.post<Reserva>('/reservas', data),
+  confirmar: (id: number, quantidadeRecebida: number) =>
+    api.patch<Reserva>(`/reservas/${id}/confirmar`, { quantidadeRecebida }),
   delete: (id: number) => api.delete(`/reservas/${id}`),
 };
 
