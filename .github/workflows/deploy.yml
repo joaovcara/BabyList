@@ -33,12 +33,12 @@ jobs:
       - name: Build and start containers
         run: |
           set -euo pipefail
-          sudo docker compose --env-file .env up -d --build
+          docker compose --env-file .env up -d --build
 
       - name: Show container status
         run: |
           set -euo pipefail
-          sudo docker compose --env-file .env ps
+          docker compose --env-file .env ps
 
       - name: Health check
         run: |
