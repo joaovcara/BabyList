@@ -2,7 +2,7 @@ node_modules/
 dist/
 .env
 .env.*
+!.env.example
 *.log
 .DS_Store
 data/database.json
-deploy/iis/site/web.config

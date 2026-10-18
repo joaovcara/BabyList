@@ -1,5 +1,4 @@
-# IIS fica na porta 80 do servidor; este stack NÃO deve publicar a porta 80.
-# O frontend expõe apenas uma porta interna (APP_PORT) para o IIS fazer reverse proxy.
+# Frontend em 127.0.0.1:APP_PORT para o proxy reverso do host (não publica a porta 80).
 name: babylist
 
 services:
@@ -29,10 +28,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_BASE_PATH: /${IIS_SUBPATH:-BabyList}/
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/BabyList/}
     container_name: babylist-frontend
     ports:
-      # 127.0.0.1: só o IIS (no mesmo servidor) acessa; evita conflito com outros containers na rede
       - "127.0.0.1:${APP_PORT:-8081}:80"
     depends_on:
       backend:

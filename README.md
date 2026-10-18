@@ -15,8 +15,9 @@ baylist/
 ├── data/
 │   └── database.json       # criado automaticamente no primeiro start
 ├── backend/                # API Express
-├── deploy/                 # IIS + scripts de deploy (Windows)
 ├── frontend/               # App React
+├── .github/workflows/      # deploy via GitHub Actions
+├── docker-compose.yml
 └── package.json            # scripts para rodar ambos
 ```
 
@@ -130,34 +131,6 @@ Base: `http://localhost:3002/api` *(dev local)* ou `http://localhost:8081/api` *
 - `GET /dashboard` – métricas (auth)
 - `GET/PUT /configuracoes` – configurações
 
-### Deploy no Windows / IIS + Docker
-
-Para servidor com IIS na porta 80 e Docker (sem conflito com outros projetos):
-
-```powershell
-copy .env.example .env
-# Edite: JWT_SECRET, APP_PORT (8081), IIS_SUBPATH (BabyList)
-npm run deploy
-```
-
-O script de deploy:
-1. Gera `deploy/iis/site/web.config` com reverse proxy para `127.0.0.1:APP_PORT`
-2. Copia o `web.config` para `IIS_SITE_PATH`
-3. Faz build e sobe os containers Docker
-
-**Pré-requisitos IIS:** URL Rewrite + ARR com proxy habilitado.
-
-Documentação completa: [deploy/README.md](deploy/README.md)
-
-### Deploy manual (sem IIS)
-
-```bash
-npm run build
-```
-
-- Backend compilado em `backend/dist/`
-- Frontend compilado em `frontend/dist/`
-
 ## Modelo de dados (`database.json`)
 
 ```json
@@ -172,6 +145,30 @@ npm run build
   }
 }
 ```
+
+## Deploy (GitHub Actions)
+
+Deploy automático no servidor on-prem via **self-hosted runner** (labels `self-hosted` e `babylist`).
+
+**Trigger:** push em `main` ou execução manual (Actions → Deploy → Run workflow).
+
+### Pré-requisitos no servidor
+
+1. Self-hosted runner instalado e online no GitHub (Settings → Actions → Runners).
+2. Clone do repositório em `/opt/apps/babylist` com remote apontando para este repo.
+3. Arquivo `/opt/apps/babylist/.env` presente (a partir de `.env.example`), com `JWT_SECRET` real, `APP_PORT=8081` e `VITE_BASE_PATH=/BabyList/`.
+4. Usuário do runner com permissão para `sudo docker compose` (NOPASSWD para Docker ou grupo `docker`).
+
+### O que o pipeline faz
+
+1. Atualiza o código em `/opt/apps/babylist` (`git reset --hard origin/main`)
+2. Confirma que `.env` existe (não sobrescreve)
+3. `sudo docker compose --env-file .env up -d --build`
+4. Health check em `http://127.0.0.1:8081/BabyList/`
+
+O volume `./data` (incluindo `database.json`) **não é apagado** pelo deploy. Não use `docker compose down -v` em produção.
+
+URL pública: `https://srv-web.ddns.net/BabyList/` (Nginx do host → `127.0.0.1:8081`).
 
 ## Arquitetura
 

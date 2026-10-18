@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, babylist]
+    defaults:
+      run:
+        working-directory: /opt/apps/babylist
+
+    steps:
+      - name: Sync repository
+        run: |
+          set -euo pipefail
+          git fetch origin
+          git checkout main
+          git reset --hard "origin/main"
+
+      - name: Verify .env exists
+        run: |
+          set -euo pipefail
+          if [ ! -f .env ]; then
+            echo "Arquivo .env não encontrado em /opt/apps/babylist."
+            echo "Copie .env.example para .env e configure JWT_SECRET antes do deploy."
+            exit 1
+          fi
+
+      - name: Build and start containers
+        run: |
+          set -euo pipefail
+          sudo docker compose --env-file .env up -d --build
+
+      - name: Show container status
+        run: |
+          set -euo pipefail
+          sudo docker compose --env-file .env ps
+
+      - name: Health check
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:8081/BabyList/" >/dev/null; then
+              echo "Health check OK"
+              exit 0
+            fi
+            echo "Tentativa $i/30 falhou; aguardando..."
+            sleep 2
+          done
+          echo "Health check falhou após várias tentativas"
+          exit 1
